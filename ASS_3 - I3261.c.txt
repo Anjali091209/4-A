@@ -1,0 +1,363 @@
+/****************************************************************************
+Name-Omkar Bhise
+Div-2 
+Roll no- I3261
+*****************************************************************************/
+
+
+
+Q.  Implement the C program for CPU Scheduling Algorithms: Shortest Job First 
+(Preemptive) and Round Robin with different arrival time.
+
+
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct queue {
+    int data[50], r, f;
+} Q;
+
+int delqueue(Q *);
+void enqueue(Q *, int);
+
+void tat_and_wt(int at[], int bt[], int toc[], int n) {
+    int tat[10], wt[10], i;
+    float x = 0, y = 0; 
+    for (i = 1; i <= n; i++) {
+        tat[i] = toc[i] - at[i];
+        wt[i] = tat[i] - bt[i];
+        x += tat[i];
+        y += wt[i];
+    }
+    printf("\nProcess info\n");
+    printf("\nProcess\t  Arrival Time\t Burst Time\t Turnaround Time\t Waiting Time\n");
+    i = 1;
+    while (i <= n) {
+        printf("P%d\t  %d\t\t %d\t\t %d\t\t\t %d\n", i, at[i], bt[i], tat[i], wt[i]);
+        i++;
+    }
+    
+    printf("\nAverage Turnaround Time : %.2f", x / n);
+    printf("\nAverage Waiting Time    : %.2f\n", y / n);
+}
+
+int main() {
+    int p[10], n, at[10], bt[10], i = 1, j, k = 1, l;
+    int op, tag = 0, sum, temp, x, y, quantum, rr[20], trr[10], ack[10];
+    int sjfnp[10], sjfp[20], srt[20], tbt[20], toc[10];
+    Q s;
+
+    do {
+        printf("\nMAIN MENU (Process Scheduling)");
+        printf("\n1. Get Data");
+        printf("\n2. View Data");
+        printf("\n3. SJF (Preemptive)");
+        printf("\n4. Round Robin");
+        printf("\n0. Exit\nEnter your choice: ");
+        scanf("%d", &op);
+        switch (op) {
+            case 1:
+                tag = 1;
+                printf("\nEnter total number of processes: ");
+                scanf("%d", &n);
+                if (n <= 0) {
+                    printf("\n\tINVALID INPUT\n");
+                    break;
+                }
+                printf("\nEnter the specified time for the following processes");
+                for (i = 1; i <= n; i++) {
+                    printf("\nP%d", i);
+                    printf("\tArrival Time: ");
+                    scanf("%d", &at[i]);
+                    printf("\tBurst Time: ");
+                    scanf("%d", &bt[i]);
+                }
+                break;
+
+            case 2:
+                if (!tag) {
+                    printf("\nPlease get data first\n");
+                    break;
+                }
+                printf("\nProcess info\n");
+                printf("\nProcess\t  Arrival Time\t Burst Time\n");
+                for (i = 1; i <= n; i++) {
+                    printf("P%d\t  %d\t\t %d\n", i, at[i], bt[i]);
+                }
+                break;
+
+            case 3: 
+                if (!tag) {
+                    printf("\nPlease get data first\n");
+                    break;
+                }
+                for (i = 0; i <= 20; i++) {
+                    sjfp[i] = i;
+                    srt[i] = i;
+                }
+                x = 1; 
+                for (i = 1; i < n; i++)
+                    if (at[x] > at[i])
+                        x = i;
+                k = 1;
+                sjfp[k] = x;
+                sum = 0;
+                
+                for (i = 1; i <= n; i++) {
+                    sum += bt[i];
+                    tbt[i] = bt[i];
+                }
+                
+                for (i = 1; i <= sum; i++) {
+                    tbt[x] -= 1;
+                    y = x;
+                    if (tbt[x] == 0) { 
+                        for (l = 1; l <= n; l++) {
+                            if (tbt[l] != 0) {
+                                x = l;
+                                break;
+                            }
+                        }
+                    }
+                    for (j = 1; j <= n; j++) 
+                    {
+                        if (at[j] <= i && tbt[j] > 0) {
+                            if (tbt[j] < tbt[x])
+                                x = j;
+                        }
+                    }
+                    if (y != x) {
+                        srt[k++] = i;
+                        sjfp[k] = x;  
+                    }
+                }
+                srt[k] = sum;
+                
+                printf("\nThe SJF (Preemptive) scheduling of processes is: ");
+                for (i = 1; i <= k; i++)
+                    printf("| P%d ", sjfp[i]);
+                printf("|\n\t\t\t\t\t\t");
+               
+                for (i = 0; i <= k; i++)
+                    printf("%5d", srt[i]);
+                
+                for (i = 0; i <= n; i++)
+                    for (j = 0; j <= k; j++)
+                        if (sjfp[j] == i)
+                            toc[i] = srt[j];
+                tat_and_wt(at, bt, toc, n);
+                break;
+
+            case 4: 
+                if (!tag) {
+                    printf("\nPlease get data first\n");
+                    break;
+                }
+                printf("\nEnter the value of Quantum: ");
+                scanf("%d", &quantum);
+                printf("\nThe Round Robin scheduling of processes is:  ");
+                sum = 0;
+                s.f = s.r = -1;
+                
+                for (i = 1; i <= n; i++) {
+                    tbt[i] = bt[i];
+                    trr[i] = i;
+                    sum += bt[i]; 
+                    ack[i] = 0;
+                }
+                
+                for (i = 1; i < n; i++) {
+                    for (j = i + 1; j <= n; j++) {
+                        if (at[trr[i]] > at[trr[j]]) {
+                        
+                            temp = trr[i];
+                            trr[i] = trr[j];
+                            trr[j] = temp;
+                        }
+                    }
+                }
+                x = 1;
+                k = i = 0;
+                ack[trr[x]] = 1;
+                srt[k++] = 0;
+              
+		 while (i < sum) {
+                    if (quantum < tbt[trr[x]]) {
+                        i += quantum;
+                        tbt[trr[x]] -= quantum;
+                        printf("| P%d ", trr[x]);
+                        rr[k] = trr[x];
+                        srt[k++] = i;
+                    } else {
+                        i += tbt[trr[x]];
+                        tbt[trr[x]] = 0;
+                        printf("| P%d ", trr[x]);
+                        rr[k] = trr[x];
+                        srt[k++] = i;
+                    }
+                    for (j = 1; j <= n; j++) 
+                    {
+                        if (i >= at[trr[j]] && ack[trr[j]] != 1) {
+                            ack[trr[j]] = 1;
+                            enqueue(&s, trr[j]);
+                        }
+                    }
+                    if (tbt[trr[x]] != 0)
+                        enqueue(&s, trr[x]);
+                    temp = delqueue(&s); 
+                    for (j = 1; j <= n; j++) {
+                        if (temp == trr[j]) {
+                            x = j;
+                            break;
+                        }
+                    }
+                }
+                printf("|\n\t\t\t\t\t");
+                
+                for (i = 0; i < k; i++)
+                    printf("%5d", srt[i]);
+                
+                for (i = 1; i <= n; i++)
+                    for (j = 1; j <= k; j++)
+                        if (rr[j] == i)
+                            toc[i] = srt[j];
+                tat_and_wt(at, bt, toc, n);
+                break;
+
+            case 0:
+                exit(0);
+            default:
+                printf("\nINVALID INPUT \n");
+        }
+    } while (op);
+    return 0;
+}
+
+int delqueue(Q *q) { 
+    int p;
+    if (q->f != -1) {
+        p = q->data[q->f];
+        if (q->r == q->f)
+            q->r = q->f = -1;
+        else
+            q->f += 1;
+    } else {
+        p = -1;
+    }
+    return p;
+}
+
+void enqueue(Q *q, int p) { 
+    if (q->f == -1) {
+        q->f = 0;
+        q->r = 0;
+        q->data[0] = p;
+    } else {
+        q->r += 1;
+        q->data[q->r] = p;
+    }
+}
+
+
+
+***********************OUTPUT*********************************
+
+
+ubuntu@ubuntu-VirtualBox:~$ ./a.out
+
+MAIN MENU (Process Scheduling)
+1. Get Data
+2. View Data
+3. SJF (Preemptive)
+4. Round Robin
+0. Exit
+Enter your choice: 1
+
+Enter total number of processes: 5
+
+Enter the specified time for the following processes
+P1	Arrival Time: 0 8
+	Burst Time: 
+P2	Arrival Time: 1 4
+	Burst Time: 
+P3	Arrival Time: 2 9
+	Burst Time: 
+P4	Arrival Time: 3 5
+	Burst Time: 
+P5	Arrival Time: 4 2
+	Burst Time: 
+MAIN MENU (Process Scheduling)
+1. Get Data
+2. View Data
+3. SJF (Preemptive)
+4. Round Robin
+0. Exit
+Enter your choice: 3
+
+The SJF (Preemptive) scheduling of processes is: | P1 | P2 | P5 | P4 | P1 | P3 |
+						   20    1    5    7   12   19   28
+Process info
+
+Process	  Arrival Time	 Burst Time	 Turnaround Time	 Waiting Time
+P1	  0		 8		 19			 11
+P2	  1		 4		 4			 0
+P3	  2		 9		 26			 17
+P4	  3		 5		 9			 4
+P5	  4		 2		 3			 1
+
+Average Turnaround Time : 12.20
+Average Waiting Time    : 6.60
+
+MAIN MENU (Process Scheduling)
+1. Get Data
+2. View Data
+3. SJF (Preemptive)
+4. Round Robin
+0. Exit
+Enter your choice: 4
+
+Enter the value of Quantum: 2
+
+The Round Robin scheduling of processes is:  | P1 | P2 | P3 | P1 | P4 | P5 | P2 | P3 | P1 | P4 | P3 | P1 | P4 | P3 | P3 |
+					    0    2    4    6    8   10   12   14   16   18   20   22   24   25   27   28
+Process info
+
+Process	  Arrival Time	 Burst Time	 Turnaround Time	 Waiting Time
+P1	  0		 8		 24			 16
+P2	  1		 4		 13			 9
+P3	  2		 9		 26			 17
+P4	  3		 5		 22			 17
+P5	  4		 2		 8			 6
+
+Average Turnaround Time : 18.60
+Average Waiting Time    : 13.00
+
+MAIN MENU (Process Scheduling)
+1. Get Data
+2. View Data
+3. SJF (Preemptive)
+4. Round Robin
+0. Exit
+Enter your choice: 2
+
+Process info
+
+Process	  Arrival Time	 Burst Time
+P1	  0		 8
+P2	  1		 4
+P3	  2		 9
+P4	  3		 5
+P5	  4		 2
+
+MAIN MENU (Process Scheduling)
+1. Get Data
+2. View Data
+3. SJF (Preemptive)
+4. Round Robin
+0. Exit
+Enter your choice: 0
+ubuntu@ubuntu-VirtualBox:~$ 
+
+
+
+
